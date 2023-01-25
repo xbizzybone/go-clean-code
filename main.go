@@ -40,7 +40,7 @@ func init() {
 		log.Fatal(err)
 	}
 
-	zapLogger = zapLogger.With(zap.String("service", "go-websocket"))
+	zapLogger = zapLogger.With(zap.String("service", "go-clean-code"))
 	zapLogger.Info("Logger initialized")
 
 	clientOptions := options.Client().ApplyURI(os.Getenv("MONGO_CONNECTION_STRING"))
