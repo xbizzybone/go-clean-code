@@ -4,9 +4,14 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 // Request
 type UserCreateRequest struct {
-	Name     string `bson:"name,omitempty" json:"name" validate:"required"`
-	Email    string `bson:"email,omitempty" json:"email" validate:"required,email"`
-	Password string `bson:"password,omitempty" json:"password,omitempty" validate:"required"`
+	Name      string    `bson:"name,omitempty" json:"name" validate:"required"`
+	Email     string    `bson:"email,omitempty" json:"email" validate:"required,email"`
+	Password  string    `bson:"password,omitempty" json:"password,omitempty" validate:"required"`
+	Aditional Aditional `bson:"aditional,omitempty" json:"aditional" validate:"required"`
+}
+
+type Aditional struct {
+	Email string `bson:"email,omitempty" json:"email" validate:"required,email"`
 }
 
 type UserUpdateRequest struct {

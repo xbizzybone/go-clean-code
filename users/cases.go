@@ -1,6 +1,7 @@
 package users
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -21,8 +22,8 @@ func NewCases(logger *zap.Logger, repository Repository) Cases {
 	}
 }
 
-func (c *cases) Register(user *User) (User, error) {
-	if _, err := c.repository.GetUserByEmail(user.Email); err == nil {
+func (c *cases) Register(ctx context.Context, user *User) (User, error) {
+	if _, err := c.repository.GetUserByEmail(ctx, user.Email); err == nil {
 		return User{}, errors.New("user already exists")
 	}
 
@@ -32,11 +33,11 @@ func (c *cases) Register(user *User) (User, error) {
 	}
 	user.Password = hashedPassword
 
-	if err = c.repository.CreateUser(user); err != nil {
+	if err = c.repository.CreateUser(ctx, user); err != nil {
 		return User{}, errors.New("error while creating user")
 	}
 
-	createUser, err := c.repository.GetUserByEmail(user.Email)
+	createUser, err := c.repository.GetUserByEmail(ctx, user.Email)
 	if err != nil {
 		return User{}, errors.New("error while getting user")
 	}
@@ -44,8 +45,8 @@ func (c *cases) Register(user *User) (User, error) {
 	return createUser, nil
 }
 
-func (c *cases) Login(user *User) (User, error) {
-	result, err := c.repository.GetUserByEmail(user.Email)
+func (c *cases) Login(ctx context.Context, user *User) (User, error) {
+	result, err := c.repository.GetUserByEmail(ctx, user.Email)
 	if err != nil {
 		return User{}, errors.New("user not found")
 	}
@@ -55,31 +56,31 @@ func (c *cases) Login(user *User) (User, error) {
 	}
 
 	result.LastLogin = primitive.NewDateTimeFromTime(time.Now())
-	if err = c.repository.UpdateUser(&result); err != nil {
+	if err = c.repository.UpdateUser(ctx, &result); err != nil {
 		return User{}, errors.New("error while updating user")
 	}
 
 	return result, nil
 }
 
-func (c *cases) GetUserById(id string) (User, error) {
-	return c.repository.GetUserById(id)
+func (c *cases) GetUserById(ctx context.Context, id string) (User, error) {
+	return c.repository.GetUserById(ctx, id)
 }
 
-func (c *cases) GetUserByEmail(email string) (User, error) {
-	return c.repository.GetUserByEmail(email)
+func (c *cases) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	return c.repository.GetUserByEmail(ctx, email)
 }
 
-func (c *cases) Deactivate(id string) error {
-	return c.repository.Deactivate(id)
+func (c *cases) Deactivate(ctx context.Context, id string) error {
+	return c.repository.Deactivate(ctx, id)
 }
 
-func (c *cases) Activate(id string) error {
-	return c.repository.Activate(id)
+func (c *cases) Activate(ctx context.Context, id string) error {
+	return c.repository.Activate(ctx, id)
 }
 
-func (c *cases) Update(id string, user *User) error {
-	userToUpdate, err := c.repository.GetUserById(id)
+func (c *cases) Update(ctx context.Context, id string, user *User) error {
+	userToUpdate, err := c.repository.GetUserById(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -100,7 +101,7 @@ func (c *cases) Update(id string, user *User) error {
 		userToUpdate.Password = hashedPassword
 	}
 
-	return c.repository.UpdateUser(user)
+	return c.repository.UpdateUser(ctx, user)
 }
 
 func hashPassword(password string) (string, error) {

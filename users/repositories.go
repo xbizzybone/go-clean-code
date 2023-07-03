@@ -17,25 +17,26 @@ type repository struct {
 }
 
 func NewRepository(logger *zap.Logger, collection *mongo.Collection) Repository {
+
 	return &repository{
 		logger:     logger,
 		collection: collection,
 	}
 }
 
-func (r *repository) CreateUser(user *User) error {
+func (r *repository) CreateUser(ctx context.Context, user *User) error {
 	user.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	user.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
 
-	_, err := r.collection.InsertOne(context.TODO(), user)
+	_, err := r.collection.InsertOne(ctx, user)
 	if err != nil {
-		r.logger.Sugar().Errorw(err.Error(), "func", "CreateUser")
+		r.logger.Sugar().Errorw(err.Error(), "func", "CreateUser", "request_id", ctx.Value("request_id"))
 		return err
 	}
 	return nil
 }
 
-func (r *repository) GetUserById(id string) (User, error) {
+func (r *repository) GetUserById(ctx context.Context, id string) (User, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		r.logger.Sugar().Errorw(err.Error(), "func", "GetUserById")
@@ -43,7 +44,7 @@ func (r *repository) GetUserById(id string) (User, error) {
 	}
 
 	user := new(User)
-	if err = r.collection.FindOne(context.TODO(), bson.M{"_id": objID}).Decode(user); err != nil {
+	if err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(user); err != nil {
 		if err == mongo.ErrNoDocuments {
 			r.logger.Sugar().Errorw("user not found", "func", "GetUserById")
 			return User{}, errors.New("user not found")
@@ -55,9 +56,9 @@ func (r *repository) GetUserById(id string) (User, error) {
 	return *user, nil
 }
 
-func (r *repository) GetUserByEmail(email string) (User, error) {
+func (r *repository) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	user := new(User)
-	err := r.collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(user)
+	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return User{}, errors.New("user not found")
@@ -69,7 +70,7 @@ func (r *repository) GetUserByEmail(email string) (User, error) {
 	return *user, nil
 }
 
-func (r *repository) UpdateUser(user *User) error {
+func (r *repository) UpdateUser(ctx context.Context, user *User) error {
 	filter := bson.M{"_id": user.ID}
 	update := bson.M{"$set": bson.M{
 		"name":       user.Name,
@@ -79,7 +80,7 @@ func (r *repository) UpdateUser(user *User) error {
 		"updated_at": primitive.NewDateTimeFromTime(time.Now()),
 		"delete_at":  user.DeleteAt,
 	}}
-	_, err := r.collection.UpdateOne(context.Background(), filter, update)
+	_, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			r.logger.Sugar().Errorw("user not found", "func", "UpdateUser")
@@ -93,7 +94,7 @@ func (r *repository) UpdateUser(user *User) error {
 	return nil
 }
 
-func (r *repository) Deactivate(id string) error {
+func (r *repository) Deactivate(ctx context.Context, id string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -107,7 +108,7 @@ func (r *repository) Deactivate(id string) error {
 		"delete_at":  primitive.NewDateTimeFromTime(time.Now()),
 	}}
 
-	_, err = r.collection.UpdateOne(context.Background(), filter, update)
+	_, err = r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			r.logger.Sugar().Errorw("user not found", "func", "Deactivate")
@@ -121,7 +122,7 @@ func (r *repository) Deactivate(id string) error {
 	return nil
 }
 
-func (r *repository) Activate(id string) error {
+func (r *repository) Activate(ctx context.Context, id string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 
 	if err != nil {
@@ -136,7 +137,7 @@ func (r *repository) Activate(id string) error {
 		"updated_at": primitive.NewDateTimeFromTime(time.Now()),
 	}}
 
-	_, err = r.collection.UpdateOne(context.Background(), filter, update)
+	_, err = r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			r.logger.Sugar().Errorw("user not found", "func", "Activate")

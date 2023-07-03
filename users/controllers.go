@@ -3,6 +3,7 @@ package users
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/xbizzybone/go-clean-code/utils"
+	"github.com/xbizzybone/go-toolkit/validation"
 )
 
 type controller struct {
@@ -16,7 +17,7 @@ func NewController(cases Cases) Controller {
 func (c *controller) Register(ctx *fiber.Ctx) error {
 	requestBody := new(UserCreateRequest)
 
-	if err := utils.BodyParser(ctx, requestBody); err != nil {
+	if err := validation.BodyParser(ctx, requestBody); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Error validando el cuerpo de la petición :" + err.Error(),
 		})
@@ -27,7 +28,7 @@ func (c *controller) Register(ctx *fiber.Ctx) error {
 	user.Password = requestBody.Password
 	user.Name = requestBody.Name
 
-	createUser, err := c.cases.Register(user)
+	createUser, err := c.cases.Register(ctx.UserContext(), user)
 	if err != nil {
 		if err.Error() == "user already exists" {
 			return ctx.Status(fiber.StatusConflict).JSON(fiber.Map{
@@ -70,7 +71,7 @@ func (c *controller) Login(ctx *fiber.Ctx) error {
 	user.Email = requestBody.Email
 	user.Password = requestBody.Password
 
-	userResult, err := c.cases.Login(user)
+	userResult, err := c.cases.Login(ctx.UserContext(), user)
 	if err != nil {
 		if err.Error() == "user not found" {
 			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -108,7 +109,7 @@ func (c *controller) Login(ctx *fiber.Ctx) error {
 
 func (c *controller) GetUserById(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-	userResult, err := c.cases.GetUserById(id)
+	userResult, err := c.cases.GetUserById(ctx.UserContext(), id)
 	if err != nil {
 		if err.Error() == "invalid id" {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -143,7 +144,7 @@ func (c *controller) GetUserById(ctx *fiber.Ctx) error {
 func (c *controller) GetUserByEmail(ctx *fiber.Ctx) error {
 	email := ctx.Params("email")
 
-	userResult, err := c.cases.GetUserByEmail(email)
+	userResult, err := c.cases.GetUserByEmail(ctx.UserContext(), email)
 	if err != nil {
 		if err.Error() == "user not found" {
 			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -172,7 +173,7 @@ func (c *controller) GetUserByEmail(ctx *fiber.Ctx) error {
 func (c *controller) Deactivate(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
-	err := c.cases.Deactivate(id)
+	err := c.cases.Deactivate(ctx.UserContext(), id)
 	if err != nil {
 		if err.Error() == "invalid id" {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -199,7 +200,7 @@ func (c *controller) Deactivate(ctx *fiber.Ctx) error {
 func (c *controller) Activate(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
-	err := c.cases.Activate(id)
+	err := c.cases.Activate(ctx.UserContext(), id)
 	if err != nil {
 		if err.Error() == "invalid id" {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -244,7 +245,7 @@ func (c *controller) Update(ctx *fiber.Ctx) error {
 	user.Name = requestBody.Name
 	user.Password = requestBody.Password
 
-	err = c.cases.Update(id, user)
+	err = c.cases.Update(ctx.UserContext(), id, user)
 	if err != nil {
 		if err.Error() == "invalid id" {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{

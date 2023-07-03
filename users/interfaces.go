@@ -1,6 +1,8 @@
 package users
 
 import (
+	"context"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -15,20 +17,20 @@ type Controller interface {
 }
 
 type Cases interface {
-	Register(user *User) (User, error)
-	Login(user *User) (User, error)
-	GetUserById(id string) (User, error)
-	GetUserByEmail(email string) (User, error)
-	Deactivate(id string) error
-	Activate(id string) error
-	Update(id string, user *User) error
+	Register(ctx context.Context, user *User) (User, error)
+	Login(ctx context.Context, user *User) (User, error)
+	GetUserById(ctx context.Context, id string) (User, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
+	Deactivate(ctx context.Context, id string) error
+	Activate(ctx context.Context, id string) error
+	Update(ctx context.Context, id string, user *User) error
 }
 
 type Repository interface {
-	CreateUser(user *User) error
-	UpdateUser(user *User) error
-	GetUserById(id string) (User, error)
-	GetUserByEmail(email string) (User, error)
-	Deactivate(id string) error
-	Activate(id string) error
+	CreateUser(ctx context.Context, user *User) error
+	UpdateUser(ctx context.Context, user *User) error
+	GetUserById(ctx context.Context, id string) (User, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
+	Deactivate(ctx context.Context, id string) error
+	Activate(ctx context.Context, id string) error
 }

@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/mail"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 var Validator = validator.New()
@@ -31,6 +33,10 @@ func BodyParser(ctx *fiber.Ctx, data interface{}) error {
 }
 
 func GetNextMiddleWare(c *fiber.Ctx) error {
+	request_id := uuid.New().String()
+	ctx := context.WithValue(c.Context(), "request_id", request_id)
+	c.SetUserContext(ctx)
+
 	return c.Next()
 }
 
